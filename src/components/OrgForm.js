@@ -8,7 +8,7 @@ const OrgForm = (props) => {
     axios
       .post(props.url + "/organisations", {
         name: orgData.name[0],
-        hourly_rate: orgData.hourly_rate[0]
+        hourly_rate: orgData.hourly_rate[0],
       },
       {
         headers: { authorization: "bearer " + sessionStorage.getItem("token") },
@@ -42,7 +42,8 @@ const OrgForm = (props) => {
   
   const handleCreate = (event) => {
     event.preventDefault(); // Prevent Form from Refreshing
-    console.log(formData);
+    console.log(formData.hourly_rate.type);
+    props.setRefresh(true)
     creatOrg(formData); // update passed down state from App.js with the form data
   };
 
@@ -61,7 +62,7 @@ const OrgForm = (props) => {
               <h2>Name:</h2>
               <input type="text" name="name" onChange={handleChange} />
               <h2>Hourly Rate: $</h2>
-              <input type="text" name="email" onChange={handleChange} />
+              <input type="number" name="hourly_rate" onChange={handleChange} />
               <br />
               <input
                 style={{ margin: "15px 0 5px" }}
@@ -76,12 +77,12 @@ const OrgForm = (props) => {
     return (
         <div>
           <h1>Edit Organisation</h1>
-          <form onSubmit={handleCreate}>
+          <form onSubmit={handleEdit}>
               
               <h2>Name:</h2>
               <input type="text" name="name" onChange={handleChange} />
               <h2>Hourly Rate: $</h2>
-              <input type="text" name="email" onChange={handleChange} />
+              <input type="number" name="hourly_rate" onChange={handleChange} />
               <br />
               <input
                 style={{ margin: "15px 0 5px" }}

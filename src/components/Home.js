@@ -3,28 +3,39 @@ import React, { useEffect } from "react";
 import Logout from "./Logout";
 import JoinOrg from "./JoinOrg";
 import OrgForm from "./OrgForm";
+import MyOrgs from "./MyOrgs";
 
 const Home = (props) => {
-  let orgId=parseInt(sessionStorage.getItem("org_id"))
-  console.log(sessionStorage.getItem("org_id"));
-
+  console.log(props);
   useEffect(() => {
-
-  }, [])
-  if (orgId < 1) {
+    props.setOrgId(parseInt(sessionStorage.getItem("org_id")));
+  }, [props.refresh]);
+  if (props.orgId < 1) {
     return (
       <div>
-        <Logout history={props.history}/>
-        <JoinOrg url={props.url} create={props.create}/>
-        <OrgForm orgId={orgId} url={props.url}/>
+        <Logout history={props.history} />
+        <JoinOrg
+          history={props.history}
+          url={props.url}
+          create={props.create}
+          selectedOrg={props.selectedOrg}
+          setSelectedOrg={props.setSelectedOrg}
+          refresh={props.refresh}
+          setRefresh={props.setRefresh}
+        />
+        <OrgForm
+          orgId={props.orgId}
+          url={props.url}
+          refresh={props.refresh}
+          setRefresh={props.setRefresh}
+        />
       </div>
     );
   } else {
     return (
       <div>
-        der
-        <Logout history={props.history}/>
-        <OrgForm orgId={orgId} url={props.url}/>
+        <Logout history={props.history} />
+        <MyOrgs orgId={props.orgId} url={props.url} />
       </div>
     );
   }

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 const JoinOrg = (props) => {
   const [orgs, setOrgs] = useState([]);
+  console.log(props)
   const getOrgs = () => {
     axios
       .get(props.url + "/organisations", {
@@ -11,8 +12,20 @@ const JoinOrg = (props) => {
       })
       .then((orgs) => {
         setOrgs(orgs.data);
+      }).then(()=> {
+        props.setRefresh(false)
       });
   };
+  const moveToEdit = (_callback) => {
+    props.history.push("/edit")
+    _callback()
+  }
+  const selectedOrg = async (org) => {
+    await props.setSelectedOrg(org.id)
+    moveToEdit(() => {
+      console.log(props.selectedOrg)
+    })
+  }
 
   const joinOrg = (user, id) => {
     axios
@@ -37,7 +50,7 @@ const JoinOrg = (props) => {
 
   useEffect(() => {
     getOrgs();
-  }, []);
+  }, [props.refresh]);
 
   return (
     <div>
@@ -51,7 +64,9 @@ const JoinOrg = (props) => {
         return (
           <div>
             <h1>{org.name}</h1>
-            <Link>Edit</Link>
+            <span onClick={() => {
+              selectedOrg(org)
+            }}>Edit</span>
             <span
               onClick={() => {
                 joinOrg(sessionStorage.getItem("id"), org.id);
