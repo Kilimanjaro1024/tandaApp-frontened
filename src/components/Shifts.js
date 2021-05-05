@@ -5,23 +5,24 @@ const Shifts = (props) => {
   const [refresh, setRefresh] = useState(false);
   const [shifts, setShifts] = useState([]);
   const [thisOrg, setThisOrg] = useState({});
-  const [users, setUsers] = useState({});
+  const [user, setUser] = useState({});
+  let name = "";
   let thisOrgsShifts = [];
   const [lastState, setLastState] = useState([]);
 
-  const getUsers = () => {
+  const getUser = () => {
     axios
-      .get(props.url + "/users", {
+      .get(props.url + "/users/" + sessionStorage.getItem("id"), {
         headers: { authorization: "bearer " + sessionStorage.getItem("token") },
       })
-      .then((users) => {
-        setUsers(users.data);
+      .then((user) => {
+        setUser(user.data);
       });
   };
 
   const getAllShifts = () => {
     axios
-      .get(props.url + "/newshifts", {
+      .get(props.url + "/orgshifts", {
         headers: { authorization: "bearer " + sessionStorage.getItem("token") },
       })
       .then((orgShifts) => {
@@ -52,7 +53,7 @@ const Shifts = (props) => {
   };
 
   const convertMinutes = (start, end, break_length) => {
-    console.log(break_length);
+    // console.log(break_length);
     if (-(end - start) > 0) {
       if (
         -(end - start) - break_length < 10 &&
@@ -61,7 +62,7 @@ const Shifts = (props) => {
         return "0" + -(end - start);
       } else if (-(end - start) - break_length < 0) {
         const remainder = -(end - start) - break_length;
-        console.log(remainder);
+        // console.log(remainder);
         return -(end - start) + (60 + remainder);
       } else return -(end - start);
     } else {
@@ -69,7 +70,7 @@ const Shifts = (props) => {
         return "0" + (end - start);
       } else if (end - start - break_length < 0) {
         const remainder = end - start - break_length;
-        console.log(remainder);
+        // console.log(remainder);
         if (-(end - start) + (60 - remainder) < 60) {
           return -(end - start) + (60 - remainder);
         }
@@ -81,11 +82,11 @@ const Shifts = (props) => {
   };
 
   const adjustHours = (startMin, endMin, startHr, endHr, break_length) => {
-    console.log(-(endMin - startMin));
+    // console.log(-(endMin - startMin));
     if (-(endMin - startMin) - break_length > 0) {
       return -(endHr - startHr) - 1;
     } else if (-(endMin - startMin) - break_length < 0) {
-      console.log(-(endMin - startMin) - break_length);
+      // console.log(-(endMin - startMin) - break_length);
       return -(endHr - startHr) - 1;
     } else return -(endHr - startHr);
   };
@@ -116,15 +117,17 @@ const Shifts = (props) => {
   const createShift = (shiftData, start_time, end_time) => {
     console.log(start_time);
     console.log(end_time);
+    console.log(user[0].name)
     axios
       .post(
-        props.url + "/newshifts",
+        props.url + "/orgshifts",
         {
           org: sessionStorage.getItem("this_org_id"),
           user_id: sessionStorage.getItem("id"),
           start: start_time,
           end: end_time,
           break_length: shiftData.break_length[0],
+          name: user[0].name
         },
         {
           headers: {
@@ -133,6 +136,7 @@ const Shifts = (props) => {
         }
       )
       .then((shift) => {
+        name = 
         console.log(typeof thisOrg.data.id);
         console.log(typeof shift.data.org + " This is org");
         console.log(typeof shift.data.id);
@@ -173,10 +177,7 @@ const Shifts = (props) => {
     setRefresh(true);
   };
 
-  useEffect(() => {
-    // getUsers();
-    getOrg();
-    getAllShifts();
+  const createShiftList = () => {
     for (let shift = 0; shift < shifts.length; shift++) {
       console.log(shifts[shift].org);
       if (shifts[shift].org === thisOrg.data.id) {
@@ -185,8 +186,15 @@ const Shifts = (props) => {
         console.log(thisOrgsShifts);
       }
     }
-    setLastState(thisOrgsShifts);
+  }
 
+  useEffect(() => {
+    getUser();
+    getOrg();
+    getAllShifts();
+    createShiftList()
+    setLastState(thisOrgsShifts);
+    
     // console.log(users);
   }, [refresh]);
   const loaded = () => {
@@ -206,11 +214,10 @@ const Shifts = (props) => {
               <th>Shift Cost</th>
             </tr>
             {lastState.map((shift, key) => {
-              const hrsWorked=0
-              const minutesWorked=0
+             
               return (
                 <tr>
-                  <th>{shift.user_id}</th>
+                  <th>{shift.name}</th>
                   <th>
                     {new Date(shift.start).getDate()}-
                     {new Date(shift.start).getMonth()}-{" "}
@@ -267,23 +274,24 @@ const Shifts = (props) => {
             <tr>
               <th>{sessionStorage.getItem("user")}</th>
               <th>
-                <input type="text" name="date" onChange={handleChange} />
+                <input type="text" name="date" placeholder={"YYYY-MM-DD"} onChange={handleChange} />
               </th>
               <th>
-                <input type="text" name="start" onChange={handleChange} />
+                <input type="text" name="start" placeholder={"HH:MM:SS"} onChange={handleChange} />
               </th>
               <th>
-                <input type="text" name="end" onChange={handleChange} />
+                <input type="text" name="end" placeholder={"HH:MM:SS"} onChange={handleChange} />
               </th>
               <th>
                 <input
                   type="number"
                   name="break_length"
+                  placeholder={"Break Length"}
                   onChange={handleChange}
                 />
               </th>
               <th>
-                <input type="button" onClick={handleSubmit} />
+                <input type="button" value="create shift" onClick={handleSubmit} ></input>
               </th>
             </tr>
           </tbody>
