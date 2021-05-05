@@ -2,12 +2,18 @@ import axios from "axios";
 import React from "react";
 
 const Shifts = (props) => {
-  let start_time = null;
-  let end_time = null;
-  const createShift = (shiftData) => {
+
+  // const getAllShifts = () => {
+  //   axios.get(props.url)
+  // }
+
+  const createShift = (shiftData, start_time, end_time) => {
+    console.log(start_time)
+    console.log(end_time)
     axios.post(
       props.url + "/shifts",
       {
+        user_id: sessionStorage.getItem("id"),
         start: start_time,
         end: end_time,
         break_length: shiftData.break_length[0],
@@ -27,9 +33,10 @@ const Shifts = (props) => {
 
   const [formData, setFormData] = React.useState(emptyShiftFormData);
 
-  const convertToDatetime = () => {
-    start_time = new Date(formData.date[0] + " " + formData.start[0]);
-    end_time = Date(formData.date[0] + " " + formData.end[0] + " GMT");
+  const convertToDatetime = (shift_point) => {
+    const time = formData.date[0] + "T" + shift_point + "Z";
+    return time
+    
   };
 
   const handleChange = (event) => {
@@ -42,8 +49,7 @@ const Shifts = (props) => {
   const handleSubmit = (event) => {
     event.preventDefault(); // Prevent Form from Refreshing
     console.log("hello")
-    convertToDatetime();
-    createShift(formData);
+    createShift(formData, convertToDatetime(formData.start[0]), convertToDatetime(formData.end[0]));
   };
   return (
     <div>
