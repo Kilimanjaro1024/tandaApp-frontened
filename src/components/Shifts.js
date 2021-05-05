@@ -2,10 +2,12 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 
 const Shifts = (props) => {
+  const [refresh, setRefresh] = useState(false);
   const [shifts, setShifts] = useState([]);
   const [thisOrg, setThisOrg] = useState({});
   const [users, setUsers] = useState({});
-  const thisOrgsShifts = []
+  let thisOrgsShifts = [];
+  const [lastState, setLastState] = useState([]);
 
   const getUsers = () => {
     axios
@@ -14,15 +16,12 @@ const Shifts = (props) => {
       })
       .then((users) => {
         setUsers(users.data);
-      })
-      .then(() => {
-        props.setRefresh(false);
       });
   };
 
   const getAllShifts = () => {
     axios
-      .get(props.url + "/shifts", {
+      .get(props.url + "/newshifts", {
         headers: { authorization: "bearer " + sessionStorage.getItem("token") },
       })
       .then((orgShifts) => {
@@ -36,25 +35,110 @@ const Shifts = (props) => {
         headers: { authorization: "bearer " + sessionStorage.getItem("token") },
       })
       .then((org) => {
+        sessionStorage.setItem("this_org_id", org.data.id);
         setThisOrg(org);
-      });
+      })
+      .then(() => setRefresh());
+  };
+  
+  const convertWorkedToFraction = (hours, minutes) => {
+    return (hours + (minutes / 60)).toFixed(2)
+  }
+
+  const convertToCents = (num) => {
+    if ((num / 60) * (thisOrg.data.hourly_rate * 10) < 10) {
+      return "0" + num;
+    } else return (num / 60) * (thisOrg.data.hourly_rate * 10);
   };
 
+  const convertMinutes = (start, end, break_length) => {
+    console.log(break_length);
+    if (-(end - start) > 0) {
+      if (
+        -(end - start) - break_length < 10 &&
+        -(end - start) - break_length >= 0
+      ) {
+        return "0" + -(end - start);
+      } else if (-(end - start) - break_length < 0) {
+        const remainder = -(end - start) - break_length;
+        console.log(remainder);
+        return -(end - start) + (60 + remainder);
+      } else return -(end - start);
+    } else {
+      if (end - start - break_length < 10 && end - start - break_length >= 0) {
+        return "0" + (end - start);
+      } else if (end - start - break_length < 0) {
+        const remainder = end - start - break_length;
+        console.log(remainder);
+        if (-(end - start) + (60 - remainder) < 60) {
+          return -(end - start) + (60 - remainder);
+        }
+        else{
+          return -(end - start) + (60 - break_length);
+        }
+      } else return end - start;
+    }
+  };
+
+  const adjustHours = (startMin, endMin, startHr, endHr, break_length) => {
+    console.log(-(endMin - startMin));
+    if (-(endMin - startMin) - break_length > 0) {
+      return -(endHr - startHr) - 1;
+    } else if (-(endMin - startMin) - break_length < 0) {
+      console.log(-(endMin - startMin) - break_length);
+      return -(endHr - startHr) - 1;
+    } else return -(endHr - startHr);
+  };
+
+  const adjustTime = (hours, minutes) => {
+    if (hours < 11) {
+      if (minutes < 10) {
+        return hours + ":0" + minutes + "am";
+      } else {
+        return hours + ":" + minutes + "am";
+      }
+    } else if (hours >= 12) {
+      if (hours > 12) {
+        if (minutes < 10) {
+          return Math.round(hours / 2) + ":0" + minutes + "pm";
+        } else {
+          return Math.round(hours / 2) + ":" + minutes + "pm";
+        }
+      } else {
+        if (minutes < 10) {
+          return hours + ":0" + minutes + "pm";
+        } else {
+          return hours + ":" + minutes + "pm";
+        }
+      }
+    }
+  };
   const createShift = (shiftData, start_time, end_time) => {
     console.log(start_time);
     console.log(end_time);
-    axios.post(
-      props.url + "/shifts",
-      {
-        user_id: sessionStorage.getItem("id"),
-        start: start_time,
-        end: end_time,
-        break_length: shiftData.break_length[0],
-      },
-      {
-        headers: { authorization: "bearer " + sessionStorage.getItem("token") },
-      }
-    );
+    axios
+      .post(
+        props.url + "/newshifts",
+        {
+          org: sessionStorage.getItem("this_org_id"),
+          user_id: sessionStorage.getItem("id"),
+          start: start_time,
+          end: end_time,
+          break_length: shiftData.break_length[0],
+        },
+        {
+          headers: {
+            authorization: "bearer " + sessionStorage.getItem("token"),
+          },
+        }
+      )
+      .then((shift) => {
+        console.log(typeof thisOrg.data.id);
+        console.log(typeof shift.data.org + " This is org");
+        console.log(typeof shift.data.id);
+        console.log(parseInt(sessionStorage.getItem("org_id")));
+        console.log(shift);
+      });
   };
 
   const emptyShiftFormData = {
@@ -86,31 +170,25 @@ const Shifts = (props) => {
       convertToDatetime(formData.start[0]),
       convertToDatetime(formData.end[0])
     );
-    props.setRefresh(true);
+    setRefresh(true);
   };
 
   useEffect(() => {
-    getUsers();
+    // getUsers();
     getOrg();
     getAllShifts();
     for (let shift = 0; shift < shifts.length; shift++) {
-      for (let user = 0; user < users.length; user++) {
-        if (
-          users[user].organisation_id ===
-          parseInt(sessionStorage.getItem("org_id"))
-        ) {
-          if (shifts[shift].user_id == users[user].id) {
-            thisOrgsShifts.push(shifts[shift]);
-            setShifts(thisOrgsShifts)
-            console.log(shifts)
-          }
-        }
+      console.log(shifts[shift].org);
+      if (shifts[shift].org === thisOrg.data.id) {
+        console.log(shifts[shift]);
+        thisOrgsShifts.push(shifts[shift]);
+        console.log(thisOrgsShifts);
       }
     }
-    
-    console.log(thisOrg);
-    console.log(users);
-  }, [props.refresh]);
+    setLastState(thisOrgsShifts);
+
+    // console.log(users);
+  }, [refresh]);
   const loaded = () => {
     return (
       <div>
@@ -127,9 +205,9 @@ const Shifts = (props) => {
               <th>Hours Worked</th>
               <th>Shift Cost</th>
             </tr>
-            {shifts.map((shift, key) => {
-              console.log(shifts);
-
+            {lastState.map((shift, key) => {
+              const hrsWorked=0
+              const minutesWorked=0
               return (
                 <tr>
                   <th>{shift.user_id}</th>
@@ -139,20 +217,48 @@ const Shifts = (props) => {
                     {new Date(shift.start).getFullYear()}
                   </th>
                   <th>
-                    {new Date(shift.start).getUTCHours()}:
-                    {new Date(shift.start).getUTCMinutes()}
+                    {adjustTime(
+                      parseInt(new Date(shift.start).getUTCHours()),
+                      parseInt(new Date(shift.start).getUTCMinutes())
+                    )}
                   </th>
                   <th>
-                    {new Date(shift.end).getUTCHours()}:
-                    {new Date(shift.end).getUTCMinutes()}
+                    {adjustTime(
+                      parseInt(new Date(shift.end).getUTCHours()),
+                      parseInt(new Date(shift.end).getUTCMinutes())
+                    )}
                   </th>
                   <th>{shift.break_length}</th>
                   <th>
-                    {parseInt(new Date(shift.end).getUTCHours()) -
-                      parseInt(new Date(shift.start).getUTCHours())}
+                    {adjustHours(
+                      parseInt(new Date(shift.start).getUTCMinutes()),
+                      parseInt(new Date(shift.end).getUTCMinutes()),
+                      parseInt(new Date(shift.end).getUTCHours()),
+                      parseInt(new Date(shift.start).getUTCHours()),
+                      shift.break_length
+                    )}
                     :
-                    {parseInt(new Date(shift.end).getUTCMinutes()) -
-                      parseInt(new Date(shift.start).getUTCMinutes())}
+                    {convertMinutes(
+                      parseInt(new Date(shift.start).getUTCMinutes()),
+                      parseInt(new Date(shift.end).getUTCMinutes()),
+                      shift.break_length
+                    )}
+                  </th>
+                  <th>
+                    {
+                    (convertWorkedToFraction(adjustHours(
+                      parseInt(new Date(shift.start).getUTCMinutes()),
+                      parseInt(new Date(shift.end).getUTCMinutes()),
+                      parseInt(new Date(shift.end).getUTCHours()),
+                      parseInt(new Date(shift.start).getUTCHours()),
+                      shift.break_length
+                    ), convertMinutes(
+                      parseInt(new Date(shift.start).getUTCMinutes()),
+                      parseInt(new Date(shift.end).getUTCMinutes()),
+                      shift.break_length
+                    ))  *
+                      thisOrg.data.hourly_rate).toFixed(2)}
+                    
                   </th>
                 </tr>
               );
