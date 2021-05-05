@@ -77,6 +77,8 @@ function App() {
             setOrgId={setOrgId}
             selectedOrg={selectedOrg}
             setSelectedOrg={setSelectedOrg}
+            refresh={refresh}
+            setRefresh={setRefresh}
           />
         )}
       />

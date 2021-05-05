@@ -3,7 +3,6 @@ import EditOrg from "../components/EditOrg";
 import Logout from "../components/Logout";
 import Shifts from "../components/Shifts";
 
-
 const ShiftsPage = (props) => {
   return (
     <div>
@@ -15,6 +14,8 @@ const ShiftsPage = (props) => {
         setOrgId={props.setOrgId}
         selectedOrg={props.selectedOrg}
         setSelectedOrg={props.setSelectedOrg}
+        refresh={props.refresh}
+        setRefresh={props.setRefresh}
       />
     </div>
   );
