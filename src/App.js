@@ -6,6 +6,7 @@ import Homepage from "./pages/Homepage";
 import RegisterPage from "./pages/Registerpage";
 import LoginPage from "./pages/LoginPage";
 import EditPage from "./pages/EditPage";
+import ShiftsPage from "./pages/ShiftsPage";
 
 function App() {
   const url = "http://localhost:5000";
@@ -56,6 +57,20 @@ function App() {
         path="/edit"
         render={(rp) => (
           <EditPage
+            {...rp}
+            url={url}
+            orgId={orgId}
+            setOrgId={setOrgId}
+            selectedOrg={selectedOrg}
+            setSelectedOrg={setSelectedOrg}
+          />
+        )}
+      />
+      <Route
+        exact
+        path="/shifts"
+        render={(rp) => (
+          <ShiftsPage
             {...rp}
             url={url}
             orgId={orgId}

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const OrgForm = (props) => {
   const [orgs, setOrgs] = useState([]);
-  const creatOrg = (orgData) => {
+  const createOrg = (orgData) => {
     axios
       .post(props.url + "/organisations", {
         name: orgData.name[0],
@@ -44,7 +44,7 @@ const OrgForm = (props) => {
     event.preventDefault(); // Prevent Form from Refreshing
     console.log(formData.hourly_rate.type);
     props.setRefresh(true)
-    creatOrg(formData); // update passed down state from App.js with the form data
+    createOrg(formData); // update passed down state from App.js with the form data
   };
 
   const handleEdit = (event) => {

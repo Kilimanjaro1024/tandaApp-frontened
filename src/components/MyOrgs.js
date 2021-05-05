@@ -58,7 +58,9 @@ const MyOrgs = (props) => {
     <div>
       <h1>My Organizations</h1>
       <h2>{org.name}</h2>
-      <span>View Shifts</span>
+      <span onClick={() => {
+          props.history.push("/shifts")
+      }} >View Shifts</span>
       <span onClick={() => {
           selectedOrg(org)
       }} >Edit</span>
