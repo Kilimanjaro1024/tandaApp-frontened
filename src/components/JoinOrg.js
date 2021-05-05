@@ -44,6 +44,7 @@ const JoinOrg = (props) => {
       .then((user) => {
         console.log(user)
         sessionStorage.setItem("org_id", user.data.organisation_id)
+        props.setRefresh(true)
       })
       
   };

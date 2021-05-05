@@ -35,7 +35,14 @@ const Home = (props) => {
     return (
       <div>
         <Logout history={props.history} />
-        <MyOrgs orgId={props.orgId} url={props.url} />
+        <MyOrgs
+          history={props.history}
+          orgId={props.orgId}
+          url={props.url}
+          setRefresh={props.setRefresh}
+          selectedOrg={props.selectedOrg}
+          setSelectedOrg={props.setSelectedOrg}
+        />
       </div>
     );
   }

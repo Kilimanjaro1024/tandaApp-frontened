@@ -3,6 +3,8 @@ import React, { useEffect, useReducer, useState } from "react";
 import { Link } from "react-router-dom";
 //.
 const MyOrgs = (props) => {
+    console.log(props)
+    let orgId= props.orgId
   const [org, setOrg] = useState([]);
   const getOrg = () => {
     axios
@@ -11,8 +13,21 @@ const MyOrgs = (props) => {
       })
       .then((org) => {
         setOrg(org.data);
-      });
+      }).then(()=> {
+        props.setRefresh(false)
+      });;
   };
+
+  const moveToEdit = (_callback) => {
+    props.history.push("/edit")
+    _callback()
+  }
+  const selectedOrg = async (org) => {
+    await props.setSelectedOrg(org.id)
+    moveToEdit(() => {
+      console.log(props.selectedOrg)
+    })
+  }
 
   const leaveOrg = (user) => {
     axios
@@ -31,22 +46,27 @@ const MyOrgs = (props) => {
       .then((user) => {
         console.log(user);
         sessionStorage.setItem("org_id", user.data.organisation_id);
+        props.setRefresh(true)
       });
   };
 
   useEffect(() => {
     getOrg();
-  }, []);
+  }, [props.refresh]);
 
   return (
     <div>
       <h1>My Organizations</h1>
       <h2>{org.name}</h2>
       <span>View Shifts</span>
-      <span >Edit</span>
+      <span onClick={() => {
+          selectedOrg(org)
+      }} >Edit</span>
       <span
         onClick={() => {
+
           leaveOrg(sessionStorage.getItem("id"));
+          
         }}
       >
         Leave
