@@ -74,14 +74,14 @@ const JoinOrg = (props) => {
                 selectedOrg(org);
               }}
             >
-              Edit
+              Edit 
             </span>
             <span
               onClick={() => {
                 joinOrg(sessionStorage.getItem("id"), org.id);
               }}
             >
-              Join
+               Join 
             </span>
           </div>
         );
