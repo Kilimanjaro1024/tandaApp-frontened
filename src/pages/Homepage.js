@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import Login from "../components/Login";
+import React from "react";
 import Home from "../components/Home";
 
 const Homepage = (props) => {

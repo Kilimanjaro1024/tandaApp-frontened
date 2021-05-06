@@ -1,7 +1,6 @@
 import React from "react";
 import EditOrg from "../components/EditOrg";
 import Logout from "../components/Logout";
-import OrgForm from "../components/OrgForm";
 
 const EditPage = (props) => {
   return (

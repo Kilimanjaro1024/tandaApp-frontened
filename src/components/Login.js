@@ -3,6 +3,7 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 
 const Login = (props) => {
+  //#region Form Functions
   const handleLogin = (loginInfo) => {
     axios
       .post(props.url + "/login", {
@@ -51,6 +52,8 @@ const Login = (props) => {
     handleLogin(formData); // update passed down state from App.js with the form data
     
   };
+  //#endregion
+  
   return (
     <div>
       <h1>Login</h1>

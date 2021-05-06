@@ -1,9 +1,10 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 
 const EditOrg = (props) => {
   const [org, setOrg] = useState([]);
+
+  //#region API Calls
   const getOrg = () => {
     axios
       .get(props.url + "/organisations/" + props.selectedOrg, {
@@ -13,20 +14,6 @@ const EditOrg = (props) => {
         console.log(org.data);
         setOrg(org);
       });
-  };
-
-  const [orgs, setOrgs] = useState([]);
-  const creatOrg = (orgData) => {
-    axios.post(
-      props.url + "/organisations",
-      {
-        name: orgData.name[0],
-        hourly_rate: orgData.hourly_rate[0],
-      },
-      {
-        headers: { authorization: "bearer " + sessionStorage.getItem("token") },
-      }
-    );
   };
 
   const editOrg = (orgData) => {
@@ -41,7 +28,9 @@ const EditOrg = (props) => {
       }
     );
   };
+  //#endregion
 
+  //#region Form Functions
   const emptyOrgFormData = {
     name: "",
     hourly_rate: "",
@@ -56,20 +45,15 @@ const EditOrg = (props) => {
     });
   };
 
-  const handleCreate = (event) => {
-    event.preventDefault(); // Prevent Form from Refreshing
-    console.log(formData);
-    creatOrg(formData); // update passed down state from App.js with the form data
-  };
-
   const handleEdit = (event) => {
     event.preventDefault(); // Prevent Form from Refreshing
     console.log(formData);
     editOrg(formData); // update passed down state from App.js with the form data
   };
+  //#endregion
+
   useEffect(() => {
     getOrg();
-    
   }, []);
 
   const loaded = () => {
@@ -94,9 +78,13 @@ const EditOrg = (props) => {
           <br />
           <input style={{ margin: "15px 0 5px" }} type="submit" value="Edit" />
         </form>
-        <span onClick={() => {
-          props.history.goBack()
-        }}>Back</span>
+        <span
+          onClick={() => {
+            props.history.goBack();
+          }}
+        >
+          Back
+        </span>
       </div>
     );
   };
@@ -105,7 +93,7 @@ const EditOrg = (props) => {
     return <h1>LOADING...</h1>;
   };
 
-  return org.data ? loaded() : loading()
+  return org.data ? loaded() : loading();
 };
 
 export default EditOrg;

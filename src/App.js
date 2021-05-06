@@ -1,6 +1,6 @@
 import { Route, Switch } from "react-router-dom";
 import "./App.css";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import Homepage from "./pages/Homepage";
 import RegisterPage from "./pages/Registerpage";
@@ -13,7 +13,7 @@ function App() {
   const [user, setUser] = useState();
   const [selectedOrg, setSelectedOrg] = useState();
   const [orgId, setOrgId] = useState();
-  const [refresh, setRefresh] = useState( false);
+  const [refresh, setRefresh] = useState(false);
 
   return (
     <Switch>

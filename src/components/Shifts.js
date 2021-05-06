@@ -6,10 +6,11 @@ const Shifts = (props) => {
   const [shifts, setShifts] = useState([]);
   const [thisOrg, setThisOrg] = useState({});
   const [user, setUser] = useState({});
-  let name = "";
-  let thisOrgsShifts = [];
   const [lastState, setLastState] = useState([]);
 
+  let thisOrgsShifts = [];
+
+  //#region API Calls
   const getUser = () => {
     axios
       .get(props.url + "/users/" + sessionStorage.getItem("id"), {
@@ -17,6 +18,9 @@ const Shifts = (props) => {
       })
       .then((user) => {
         setUser(user.data);
+      })
+      .then(() => {
+        setRefresh(false);
       });
   };
 
@@ -30,6 +34,12 @@ const Shifts = (props) => {
       });
   };
 
+  const deleteAShift = (id) => {
+    axios.delete(props.url + "/orgshifts/" + id, {
+      headers: { authorization: "bearer " + sessionStorage.getItem("token") },
+    });
+  };
+
   const getOrg = () => {
     axios
       .get(props.url + "/organisations/" + sessionStorage.getItem("org_id"), {
@@ -38,19 +48,20 @@ const Shifts = (props) => {
       .then((org) => {
         sessionStorage.setItem("this_org_id", org.data.id);
         setThisOrg(org);
-      })
-      .then(() => setRefresh());
+      });
   };
-  
-  const convertWorkedToFraction = (hours, minutes) => {
-    return (hours + (minutes / 60)).toFixed(2)
-  }
+  //#endregion
 
-  const convertToCents = (num) => {
-    if ((num / 60) * (thisOrg.data.hourly_rate * 10) < 10) {
-      return "0" + num;
-    } else return (num / 60) * (thisOrg.data.hourly_rate * 10);
+  //#region Coversion Functions
+  const convertWorkedToFraction = (hours, minutes) => {
+    return (hours + minutes / 60).toFixed(2);
   };
+
+  // const convertToCents = (num) => {
+  //   if ((num / 60) * (thisOrg.data.hourly_rate * 10) < 10) {
+  //     return "0" + num;
+  //   } else return (num / 60) * (thisOrg.data.hourly_rate * 10);
+  // };
 
   const convertMinutes = (start, end, break_length) => {
     // console.log(break_length);
@@ -73,8 +84,7 @@ const Shifts = (props) => {
         // console.log(remainder);
         if (-(end - start) + (60 - remainder) < 60) {
           return -(end - start) + (60 - remainder);
-        }
-        else{
+        } else {
           return -(end - start) + (60 - break_length);
         }
       } else return end - start;
@@ -114,20 +124,35 @@ const Shifts = (props) => {
       }
     }
   };
+  //#endregion
+
+  //#region Creating Shift
+  const createShiftList = () => {
+    for (let shift = 0; shift < shifts.length; shift++) {
+      console.log(shifts[shift].org);
+      if (shifts[shift].org === thisOrg.data.id) {
+        console.log(shifts[shift]);
+        thisOrgsShifts.push(shifts[shift]);
+        console.log(thisOrgsShifts);
+      }
+    }
+  };
+
   const createShift = (shiftData, start_time, end_time) => {
     console.log(start_time);
     console.log(end_time);
-    console.log(user[0].name)
+    console.log(user[0].name);
     axios
       .post(
         props.url + "/orgshifts",
         {
           org: sessionStorage.getItem("this_org_id"),
+
           user_id: sessionStorage.getItem("id"),
           start: start_time,
           end: end_time,
           break_length: shiftData.break_length[0],
-          name: user[0].name
+          name: user[0].name,
         },
         {
           headers: {
@@ -136,15 +161,15 @@ const Shifts = (props) => {
         }
       )
       .then((shift) => {
-        name = 
-        console.log(typeof thisOrg.data.id);
         console.log(typeof shift.data.org + " This is org");
         console.log(typeof shift.data.id);
         console.log(parseInt(sessionStorage.getItem("org_id")));
         console.log(shift);
       });
   };
+  //#endregion
 
+  //#region Form Functions
   const emptyShiftFormData = {
     date: "",
     start: "",
@@ -176,31 +201,28 @@ const Shifts = (props) => {
     );
     setRefresh(true);
   };
-
-  const createShiftList = () => {
-    for (let shift = 0; shift < shifts.length; shift++) {
-      console.log(shifts[shift].org);
-      if (shifts[shift].org === thisOrg.data.id) {
-        console.log(shifts[shift]);
-        thisOrgsShifts.push(shifts[shift]);
-        console.log(thisOrgsShifts);
-      }
-    }
-  }
+  //#endregion
 
   useEffect(() => {
     getUser();
     getOrg();
     getAllShifts();
-    createShiftList()
+    createShiftList();
     setLastState(thisOrgsShifts);
-    
+
     // console.log(users);
   }, [refresh]);
   const loaded = () => {
     return (
       <div>
         <h1>{thisOrg.data.name}</h1>
+        <button
+          onClick={() => {
+            setRefresh(true);
+          }}
+        >
+          Load Shifts
+        </button>
         <h3>Shifts</h3>
         <table>
           <tbody>
@@ -213,8 +235,8 @@ const Shifts = (props) => {
               <th>Hours Worked</th>
               <th>Shift Cost</th>
             </tr>
+
             {lastState.map((shift, key) => {
-             
               return (
                 <tr>
                   <th>{shift.name}</th>
@@ -252,20 +274,25 @@ const Shifts = (props) => {
                     )}
                   </th>
                   <th>
-                    {
-                    (convertWorkedToFraction(adjustHours(
-                      parseInt(new Date(shift.start).getUTCMinutes()),
-                      parseInt(new Date(shift.end).getUTCMinutes()),
-                      parseInt(new Date(shift.end).getUTCHours()),
-                      parseInt(new Date(shift.start).getUTCHours()),
-                      shift.break_length
-                    ), convertMinutes(
-                      parseInt(new Date(shift.start).getUTCMinutes()),
-                      parseInt(new Date(shift.end).getUTCMinutes()),
-                      shift.break_length
-                    ))  *
-                      thisOrg.data.hourly_rate).toFixed(2)}
-                    
+                    {(
+                      convertWorkedToFraction(
+                        adjustHours(
+                          parseInt(new Date(shift.start).getUTCMinutes()),
+                          parseInt(new Date(shift.end).getUTCMinutes()),
+                          parseInt(new Date(shift.end).getUTCHours()),
+                          parseInt(new Date(shift.start).getUTCHours()),
+                          shift.break_length
+                        ),
+                        convertMinutes(
+                          parseInt(new Date(shift.start).getUTCMinutes()),
+                          parseInt(new Date(shift.end).getUTCMinutes()),
+                          shift.break_length
+                        )
+                      ) * thisOrg.data.hourly_rate
+                    ).toFixed(2)}
+                  </th>
+                  <th>
+                    <button>X</button>
                   </th>
                 </tr>
               );
@@ -274,13 +301,28 @@ const Shifts = (props) => {
             <tr>
               <th>{sessionStorage.getItem("user")}</th>
               <th>
-                <input type="text" name="date" placeholder={"YYYY-MM-DD"} onChange={handleChange} />
+                <input
+                  type="text"
+                  name="date"
+                  placeholder={"YYYY-MM-DD"}
+                  onChange={handleChange}
+                />
               </th>
               <th>
-                <input type="text" name="start" placeholder={"HH:MM:SS"} onChange={handleChange} />
+                <input
+                  type="text"
+                  name="start"
+                  placeholder={"HH:MM:SS"}
+                  onChange={handleChange}
+                />
               </th>
               <th>
-                <input type="text" name="end" placeholder={"HH:MM:SS"} onChange={handleChange} />
+                <input
+                  type="text"
+                  name="end"
+                  placeholder={"HH:MM:SS"}
+                  onChange={handleChange}
+                />
               </th>
               <th>
                 <input
@@ -291,7 +333,11 @@ const Shifts = (props) => {
                 />
               </th>
               <th>
-                <input type="button" value="create shift" onClick={handleSubmit} ></input>
+                <input
+                  type="button"
+                  value="create shift"
+                  onClick={handleSubmit}
+                ></input>
               </th>
             </tr>
           </tbody>
@@ -314,23 +360,3 @@ const Shifts = (props) => {
 };
 
 export default Shifts;
-
-// axios.get(props.url + "/users", {
-//   headers: {
-//     authorization: "bearer " + sessionStorage.getItem("token"),
-//   },
-// }).then((users) => {
-//   console.log(users)
-//   console.log(shifts)
-//   for(let shift; shift < shifts.length; shift++){
-//     console.log(shift)
-//     for (let user = 0; user < users.length; user++) {
-//       console.log(user)
-//       // if(users[user].data.organisation_id === sessionStorage.getItem("org_id") && users[user].data.id === thisOrg.data.id){
-//       //   thisOrgsShifts.push(shifts[shift])
-//       //   console.log(shifts)
-//       // }
-
-//     }
-//   }
-// });
