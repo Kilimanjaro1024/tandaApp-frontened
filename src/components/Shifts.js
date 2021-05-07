@@ -63,6 +63,9 @@ const Shifts = (props) => {
   //   } else return (num / 60) * (thisOrg.data.hourly_rate * 10);
   // };
 
+
+  //needs to be updated to take a positive value for break minutes into account
+  
   const convertMinutes = (start, end, break_length) => {
     // console.log(break_length);
     if (-(end - start) > 0) {
