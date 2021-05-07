@@ -242,7 +242,7 @@ const Shifts = (props) => {
                   <th>{shift.name}</th>
                   <th>
                     {new Date(shift.start).getDate()}-
-                    {new Date(shift.start).getMonth()}-{" "}
+                    {(new Date(shift.start).getMonth() + 1)}-
                     {new Date(shift.start).getFullYear()}
                   </th>
                   <th>
