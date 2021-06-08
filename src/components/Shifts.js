@@ -11,6 +11,48 @@ const Shifts = (props) => {
   let thisOrgsShifts = [];
 
   //#region API Calls
+  const getUser = () => {
+    axios
+      .get(props.url + "/users/" + sessionStorage.getItem("id"), {
+        headers: { authorization: "bearer " + sessionStorage.getItem("token") },
+      })
+      .then((user) => {
+        setUser(user.data);
+      })
+      .then(() => {
+        setRefresh(false);
+      });
+  };
+
+  const getAllShifts = () => {
+    axios
+      .get(props.url + "/orgshifts", {
+        headers: { authorization: "bearer " + sessionStorage.getItem("token") },
+      })
+      .then((orgShifts) => {
+        setShifts(orgShifts.data);
+      });
+  };
+
+  const deleteAShift = (id) => {
+    axios.delete(props.url + "/orgshifts/" + id, {
+      headers: { authorization: "bearer " + sessionStorage.getItem("token") },
+    });
+  };
+
+  const getOrg = () => {
+    axios
+      .get(props.url + "/organisations/" + sessionStorage.getItem("org_id"), {
+        headers: { authorization: "bearer " + sessionStorage.getItem("token") },
+      })
+      .then((org) => {
+        sessionStorage.setItem("this_org_id", org.data.id);
+        setThisOrg(org);
+      });
+  };
+  //#endregion
+
+  //#region Coversion Functions
   const convertWorkedToFraction = (hours, minutes) => {
     return (hours + minutes / 60).toFixed(2);
   };
@@ -87,9 +129,7 @@ const Shifts = (props) => {
         }
       }
     }
-  };
- 
- 
+  }; 
   //#endregion
 
   //#region Creating Shift
