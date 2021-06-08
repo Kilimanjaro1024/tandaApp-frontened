@@ -11,73 +11,29 @@ const Shifts = (props) => {
   let thisOrgsShifts = [];
 
   //#region API Calls
-  const getUser = () => {
-    axios
-      .get(props.url + "/users/" + sessionStorage.getItem("id"), {
-        headers: { authorization: "bearer " + sessionStorage.getItem("token") },
-      })
-      .then((user) => {
-        setUser(user.data);
-      })
-      .then(() => {
-        setRefresh(false);
-      });
-  };
-
-  const getAllShifts = () => {
-    axios
-      .get(props.url + "/orgshifts", {
-        headers: { authorization: "bearer " + sessionStorage.getItem("token") },
-      })
-      .then((orgShifts) => {
-        setShifts(orgShifts.data);
-      });
-  };
-
-  const deleteAShift = (id) => {
-    axios.delete(props.url + "/orgshifts/" + id, {
-      headers: { authorization: "bearer " + sessionStorage.getItem("token") },
-    });
-  };
-
-  const getOrg = () => {
-    axios
-      .get(props.url + "/organisations/" + sessionStorage.getItem("org_id"), {
-        headers: { authorization: "bearer " + sessionStorage.getItem("token") },
-      })
-      .then((org) => {
-        sessionStorage.setItem("this_org_id", org.data.id);
-        setThisOrg(org);
-      });
-  };
-  //#endregion
-
-  //#region Coversion Functions
   const convertWorkedToFraction = (hours, minutes) => {
     return (hours + minutes / 60).toFixed(2);
   };
-
+  
   // const convertToCents = (num) => {
   //   if ((num / 60) * (thisOrg.data.hourly_rate * 10) < 10) {
   //     return "0" + num;
   //   } else return (num / 60) * (thisOrg.data.hourly_rate * 10);
   // };
-
-
-  //needs to be updated to take a positive value for break minutes into account
   
   const convertMinutes = (start, end, break_length) => {
     // console.log(break_length);
-    if (-(end - start) > 0) {
+    // console.log(end)
+    // console.log(start)
+    if ((end - start) > 0) {
       if (
-        -(end - start) - break_length < 10 &&
-        -(end - start) - break_length >= 0
+        (end - start) - break_length < 10 &&
+        (end - start) - break_length >= 0
       ) {
-        return "0" + -(end - start);
-      } else if (-(end - start) - break_length < 0) {
-        const remainder = -(end - start) - break_length;
-        // console.log(remainder);
-        return -(end - start) + (60 + remainder);
+        return "0" + (end - start);
+      } else if ((end - start) - break_length < 0) {
+        const remainder = (end - start) - break_length;
+        return (end - start) + (60 + remainder);
       } else return -(end - start);
     } else {
       if (end - start - break_length < 10 && end - start - break_length >= 0) {
@@ -85,25 +41,30 @@ const Shifts = (props) => {
       } else if (end - start - break_length < 0) {
         const remainder = end - start - break_length;
         // console.log(remainder);
-        if (-(end - start) + (60 - remainder) < 60) {
-          return -(end - start) + (60 - remainder);
+        if ((end - start) + (60 - remainder) < 60) {
+          return (end - start) + (60 - remainder);
         } else {
-          return -(end - start) + (60 - break_length);
+          return (end - start) + (60 - break_length);
         }
       } else return end - start;
     }
   };
-
+  
   const adjustHours = (startMin, endMin, startHr, endHr, break_length) => {
-    // console.log(-(endMin - startMin));
-    if (-(endMin - startMin) - break_length > 0) {
-      return -(endHr - startHr) - 1;
-    } else if (-(endMin - startMin) - break_length < 0) {
-      // console.log(-(endMin - startMin) - break_length);
-      return -(endHr - startHr) - 1;
-    } else return -(endHr - startHr);
+    console.log(startHr);
+    console.log(endHr)
+  
+    // if((endMin - startMin) > 0)
+    console.log(endHr - startHr)
+   
+    if (endMin - break_length - startMin > 0) {
+      return (endHr - startHr);
+    } else if (endMin - break_length - startMin < 0) {
+      console.log((endMin - startMin) - break_length);
+      return (endHr - startHr) - 1;
+    } else return (endHr - startHr);
   };
-
+  
   const adjustTime = (hours, minutes) => {
     if (hours < 11) {
       if (minutes < 10) {
@@ -114,9 +75,9 @@ const Shifts = (props) => {
     } else if (hours >= 12) {
       if (hours > 12) {
         if (minutes < 10) {
-          return Math.round(hours / 2) + ":0" + minutes + "pm";
+          return (Math.round(hours / 2) - 2) + ":0" + minutes + "pm";
         } else {
-          return Math.round(hours / 2) + ":" + minutes + "pm";
+          return (Math.round(hours / 2) - 2) + ":" + minutes + "pm";
         }
       } else {
         if (minutes < 10) {
@@ -127,6 +88,8 @@ const Shifts = (props) => {
       }
     }
   };
+ 
+ 
   //#endregion
 
   //#region Creating Shift
